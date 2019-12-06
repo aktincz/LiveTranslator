@@ -13,12 +13,7 @@ LiveTranslator
 
 LiveTranslator is tool for [Nette Framework](http://nette.org/en/).
 
-LiveTranslator enables simple and user friendly localization of your web, by letting you to translate your texts
-via panel in debug bar. Works with the Nette 2.
-
-*LiveTranslator is forked from [NetteTranslator](https://github.com/straiki/NetteTranslator), uses its robust
-parts (especially [TranslationPanel](http://forum.nette.org/cs/4399-nette-translation-panel-preklady-primo-v-prohlizeci))
-and changes other, mainly the storage where translations are saved.*
+*LiveTranslator is forked from [NetteTranslator](https://github.com/straiki/NetteTranslator).*
 
 
 Installation
@@ -80,22 +75,6 @@ Look at the interface `LiveTranslator\ITranslatorStorage` and implement it to wr
 
 Then add storage into your configuration file as a service.
 
-
-### 2. add LiveTranslator and Panel service
-
-Into your config file add two more services `LiveTranslator\Translator` and `LiveTranslator\Panel` and define
-the default language (it is language which in your web is written basically):
-```
-nette:
-	debugger:
-		bar:
-			- LiveTranslator\Panel
-services:
-	translator: LiveTranslator\Translator(en)
-	translatorPanel: LiveTranslator\Panel
-```
-
-
 ### 3. set up your BasePresenter
 
 Inject LiveTranslator, set current language and give translator to template and forms:
@@ -139,16 +118,6 @@ class BasePresenter extends \Nette\Application\UI\Presenter
 }
 ```
 
-
-### 4. mark texts for translation
-
-In presenters call `$this->translator->translate('text to translate')`, in latte use underscore macro
-`{_ 'text to translate'}`
-
-Done. In development mode look at your debugbar. You can see panel "translations". Browse your web and texts will
-occurs in panel. Switch languages and translate!
-
-
 Advanced
 ---
 
@@ -168,9 +137,6 @@ Better way of this is setting it in config:
 			- setAvailableLanguages([en, de, fr])
 			- setPresenterLanguageParam(lang)
 ```
-
-Now your panel will display links to switch the languages!
-
 
 ### Use skills of `sprintf`
 
@@ -195,7 +161,7 @@ You can say what plural-form each language uses via `setAvailableLanguages`, thi
 ```
 (to understand this see [plural forms](https://github.com/translate/l10n-guide/blob/master/docs/l10n/pluralforms.rst#plural-forms))
 
-Then the panel will let you translate the text even in plural. More you need to do is to give plural variants
+More you need to do is to give plural variants
 of the default language to the translator, in array. And the number. Example:
 `$translator->translate( array( 'There is %d apple', 'There are %d apples' ), 3 )`
 or in latte: `{_ ['There is %d apple', 'There are %d apples'], 3}`.
@@ -206,9 +172,6 @@ or in latte: `{_ ['There is %d apple', 'There are %d apples'], 3}`.
 When there is huge amount of texts at your web, it would be good to sort them somehow. Just give the namespace
 to the translator dependent for example on [module](http://doc.nette.org/en/presenters#toc-modules).
 `$translator->setNamespace('products')`
-
-Panel will separate all texts from another namespaces.
-
 
 And now, enjoy.
 
