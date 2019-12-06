@@ -43,23 +43,6 @@ To launch the translator follow these steps:
 
 ### 1. prepare storage
 
-- **I am using Nette Database**
-
-Execute SQL script in `LiveTranslator/Storage/NetteDatabase.createTable.sql` (or its namespaced version,
-see [using namespaces](#using-namespaces)) at your database.
-
-Open your configuration file and add service:
-```
-services:
-	translatorStorage: LiveTranslator\Storage\NetteDatabase(localization_text, localization)
-```
-
-*You can rename tables in SQL script (use the same names in config file).*
-
-- **I am using [Dibi](http://dibiphp.com/)**
-
-Dibi storage is in progress. You can write your own storage. See below.
-
 - **I have no database**
 
 You can store translations into plaintext file. Just add following service into your config
