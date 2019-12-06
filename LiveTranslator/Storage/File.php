@@ -2,10 +2,10 @@
 
 namespace LiveTranslator\Storage;
 
+use LiveTranslator\TranslatorException;
 
 class File implements \LiveTranslator\ITranslatorStorage
 {
-
 	/** @var string */
 	protected $storageDir;
 
@@ -21,14 +21,14 @@ class File implements \LiveTranslator\ITranslatorStorage
 
 	/**
 	 * @param string $storageDir
-	 * @throws \Nette\DirectoryNotFoundException
+	 * @throws TranslatorException
 	 */
 	public function __construct($storageDir)
 	{
 		$this->storageDir = realpath($storageDir);
 
 		if (FALSE === $this->storageDir) {
-			throw new \Nette\DirectoryNotFoundException("Directory $storageDir was not found.");
+			throw new TranslatorException("Directory $storageDir was not found.");
 		}
 	}
 

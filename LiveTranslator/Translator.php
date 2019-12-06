@@ -2,7 +2,7 @@
 
 namespace LiveTranslator;
 
-use Nette;
+use Nette\Localization\ITranslator;
 
 /**
  * Translator implementation.
@@ -13,10 +13,9 @@ use Nette;
  * @property string $currentLang
  * @property string $defaultLang
  * @property array $availableLanguages
- * @property string $presenterLanguageParam
  * @property-read bool $currentLangDefault
  */
-class Translator extends Nette\Object implements Nette\Localization\ITranslator
+class Translator implements ITranslator
 {
 
 	/** @var string plural-form meta */
@@ -34,32 +33,18 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 	/** @var array */
 	private $availableLanguages = array();
 
-	/** @var string */
-	private $presenterLanguageParam = array();
-
 	/** @var ITranslatorStorage */
 	private $translatorStorage;
-
-	/** @var Nette\Http\SessionSection */
-	private $session;
-
-	/** @var Nette\Application\Application */
-	private $application;
 
 
 	/**
 	 * @param string  $defaultLang
 	 * @param ITranslatorStorage $translatorStorage
-	 * @param Nette\Http\Session $session
-	 * @param Nette\Application\Application $application
 	 */
-	public function __construct($defaultLang, ITranslatorStorage $translatorStorage, Nette\Http\Session $session, Nette\Application\Application $application)
+	public function __construct($defaultLang, ITranslatorStorage $translatorStorage)
 	{
 		$this->setDefaultLang($defaultLang);
 		$this->translatorStorage = $translatorStorage;
-		$session->start();
-		$this->session = $session;
-		$this->application = $application;
 	}
 
 
@@ -79,13 +64,6 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 	{
 		if ($this->lang) {
 			return $this->lang;
-		}
-		if ($this->presenterLanguageParam) {
-			$presenter = $this->application->presenter;
-			if (isset($presenter->{$this->presenterLanguageParam})) {
-				$this->setCurrentLang($presenter->{$this->presenterLanguageParam});
-				return $this->lang;
-			}
 		}
 		return $this->lang = $this->defaultLang;
 	}
@@ -138,28 +116,6 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 	{
 		list(, $plural) = $this->evalPluralForms($count, $lang);
 		return $plural;
-	}
-
-
-	/**
-	 * @return string
-	 */
-	public function getPresenterLanguageParam()
-	{
-		return $this->presenterLanguageParam;
-	}
-
-
-	/**
-	 * @param string $switchLang
-	 * @return string
-	 */
-	public function getPresenterLink($switchLang)
-	{
-		if (!$this->presenterLanguageParam) {
-			return NULL;
-		}
-		return $this->application->presenter->link('this', array($this->presenterLanguageParam => $switchLang));
 	}
 
 
@@ -260,15 +216,6 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 	}
 
 
-	/**
-	 * @param string $paramName
-	 */
-	public function setPresenterLanguageParam($paramName)
-	{
-		$this->presenterLanguageParam = $paramName;
-	}
-
-
 
 	/**
 	 * Translates string.
@@ -279,7 +226,7 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 	 * @return string
 	 * @throws TranslatorException
 	 */
-	public function translate($string, $count = NULL)
+	public function translate($string, $count = NULL, ...$parameters): string
 	{
 		$hasVariants = FALSE;
 		if (is_array($string)) {
@@ -358,9 +305,6 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 			}
 
 			if (!$translated) {
-				$newStrings = &$this->getNewStrings();
-				$newStrings[$string] = FALSE;
-
 				if ($hasVariants) {
 					if (isset($stringVariants[$plural])) {
 						$translated = $stringVariants[$plural];
@@ -397,8 +341,7 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 			throw new TranslatorException('ITranslatorStorage::getAllTranslations() must return array, '.gettype($strings).' returned.');
 		}
 
-		$newStrings = $this->getNewStrings();
-		return $strings + (is_array($newStrings) ? $newStrings : array());
+		return $strings;
 	}
 
 
@@ -416,9 +359,7 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 		}
 		$original = trim($original);
 		if ($translated === FALSE) {
-			$newStrings = &$this->getNewStrings();
 			$this->translatorStorage->removeTranslation($original, $lang, $this->namespace);
-			$newStrings[$original] = FALSE;
 			return;
 		}
 
@@ -429,29 +370,6 @@ class Translator extends Nette\Object implements Nette\Localization\ITranslator
 		foreach ($translated as $variant => $string) {
 			$this->translatorStorage->setTranslation($original, $string, $lang, $variant, $this->namespace);
 		}
-		$newStrings = &$this->getNewStrings();
-		unset($newStrings[$original]);
-	}
-
-
-
-	protected function getSessionSection()
-	{
-		$ns = $this->namespace ?: 'default';
-		return $this->session->getSection("LT-$ns");
-	}
-
-
-
-	protected function &getNewStrings()
-	{
-		// todo mohlo by to mít jednu section a ns by byly jednotlivý property zde
-		$section = $this->getSessionSection();
-		if (!isset($section->strings)) {
-			$section->strings = array();
-		}
-		$strings = &$section->strings;
-		return $strings;
 	}
 
 
